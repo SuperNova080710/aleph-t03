@@ -27,8 +27,9 @@
     }
     .app {
       height: 100%;
+      min-height: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 300px;
+      grid-template-columns: minmax(0, 1fr) 340px;
       gap: 0;
     }
     .preview-area {
@@ -37,7 +38,8 @@
       background: #0a0c12;
       border-right: 1px solid var(--line);
       min-width: 0;
-      min-height: 0;
+      min-height: 0; /* grid 자식이 뷰포트보다 작아질 수 있게 */
+      overflow: hidden;
     }
     .preview-header {
       padding: 14px 20px;
@@ -103,16 +105,18 @@
       flex-direction: column;
       background: var(--surface);
       height: 100%;
+      min-height: 0;
       overflow: hidden;
     }
     .controls-body {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
+      flex: 1 1 auto;
+      padding: 14px;
+      overflow: hidden; /* 스크롤 없음 — 높이 부족 시 축소로 맞춤 */
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       min-height: 0;
+      transform-origin: top left;
     }
     .section {
       background: var(--surface2);
@@ -141,7 +145,7 @@
       color: var(--muted);
       font-variant-numeric: tabular-nums;
     }
-    input[type="text"] {
+    input[type="text"], textarea {
       width: 100%;
       padding: 8px 10px;
       border: 1px solid var(--line);
@@ -150,8 +154,14 @@
       color: var(--ink);
       font-size: 0.9rem;
       outline: none;
+      font-family: inherit;
+      resize: vertical;
     }
-    input[type="text"]:focus { border-color: var(--accent); }
+    textarea {
+      min-height: 68px;
+      line-height: 1.45;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
     input[type="range"] {
       width: 100%;
       height: 5px;
@@ -208,7 +218,7 @@
       border-color: var(--accent);
       color: #fff;
     }
-    .file-btn { 
+    .file-btn {
       position: relative;
       overflow: hidden;
       width: 100%;
@@ -226,9 +236,9 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 10px 14px;
+      padding: 9px 12px;
       border-radius: 10px;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       font-weight: 600;
       border: none;
       cursor: pointer;
@@ -261,6 +271,23 @@
       color: #6b7280;
       cursor: not-allowed;
     }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .btn-sm {
+      padding: 7px 8px;
+      font-size: 0.78rem;
+    }
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(248,113,113,.35);
+    }
+    .btn-danger:hover {
+      background: rgba(248,113,113,.12);
+    }
     .msg {
       font-size: 0.78rem;
       padding: 8px 10px;
@@ -281,16 +308,109 @@
       display: block;
     }
     .footer-actions {
-      padding: 12px 16px;
+      flex: 0 0 auto; /* 하단 버튼은 항상 보이게, 스크롤 영역 밖 */
+      padding: 12px 14px;
       border-top: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
+    .tip {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 6px;
+    }
+    .tpl-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    .tpl-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: .12s;
+    }
+    .tpl-item:hover { border-color: var(--accent); }
+    .tpl-item.active {
+      border-color: var(--accent);
+      background: rgba(99,102,241,.12);
+    }
+    .tpl-item-name {
+      flex: 1;
+      font-size: 0.82rem;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tpl-item-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      flex: none;
+    }
+    .tpl-item-actions {
+      display: flex;
+      gap: 4px;
+      flex: none;
+    }
+    .tpl-item-actions button {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      padding: 0;
+    }
+    .tpl-item-actions button:hover {
+      border-color: var(--accent);
+      color: var(--ink);
+    }
+    .tpl-item-actions button.del:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .tpl-empty {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 12px 0;
+    }
+    .hidden-file {
+      position: absolute;
+      width: 0;
+      height: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* 좁은 화면: 위·아래 배치 */
     @media (max-width: 700px) {
-      .app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-      .controls { max-height: 48vh; }
-      .preview-area { border-right: none; border-bottom: 1px solid var(--line); }
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) minmax(0, 48vh);
+      }
+      .controls {
+        max-height: 48vh;
+        min-height: 0;
+      }
+      .preview-area {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        min-height: 0;
+      }
     }
   </style>
 </head>
@@ -299,7 +419,7 @@
     <div class="preview-area">
       <div class="preview-header">
         <h1>짤·카드 스튜디오</h1>
-        <span>T03 · 2단계</span>
+        <span>T03 · 완주판</span>
       </div>
       <div class="canvas-wrap" id="canvasWrap">
         <div class="placeholder" id="placeholder">
@@ -313,25 +433,28 @@
     </div>
 
     <div class="controls">
-      <div class="section">
-        <div class="controls-body">
+      <div class="controls-body">
+        <div class="msg" id="msg"></div>
+        
+        <div class="section">
           <div class="file-btn">
             <button class="btn btn-primary" type="button">이미지 선택</button>
             <input type="file" id="fileInput" accept="image/png,image/jpeg,.png,.jpg,.jpeg">
           </div>
-          <div class="msg" id="msg"></div>
-
           <div class="section-title">화면비</div>
           <div class="ratio-btns">
             <button class="ratio-btn active" data-ratio="1/1">1:1</button>
             <button class="ratio-btn" data-ratio="4/5">4:5</button>
             <button class="ratio-btn" data-ratio="9/16">9:16</button>
           </div>
+          <p class="tip">세 비율 모두 미리보기와 다운로드 파일이 동일한 픽셀로 맞춰집니다.</p>
         </div>
 
         <div class="section">
           <div class="section-title">문구</div>
-          <input type="text" id="textInput" placeholder="문구를 입력하세요" value="오늘의 한 줄">
+          <textarea id="textInput" placeholder="문구를 입력하세요 (Enter로 줄바꿈)">오늘의 한 줄
+가장자리와 줄바꿈 테스트</textarea>
+          <p class="tip">Enter 줄바꿈 + 긴 줄 자동 줄바꿈. 이모지·한영 혼합 가능.</p>
         </div>
 
         <div class="section">
@@ -360,8 +483,26 @@
               <input type="color" id="strokeColor" value="#000000">
             </div>
           </div>
-          <label for="strokeWidth" style="margin-top:8px">외곽선 두께 <span id="strokeWidthVal">0</span></label>
-          <input type="range" id="strokeWidth" min="0" max="12" value="0">
+          <label for="strokeWidth" style="margin-top:8px">외곽선 두께 <span id="strokeWidthVal">3</span></label>
+          <input type="range" id="strokeWidth" min="0" max="12" value="3">
+        </div>
+
+        <div class="section">
+          <div class="section-title">템플릿</div>
+          <input type="text" id="tplNameInput" placeholder="템플릿 이름 (예: 인스타 카드)" maxlength="40">
+          <div class="btn-row" style="margin-top:8px">
+            <button class="btn btn-primary btn-sm" type="button" id="tplSaveBtn">저장</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="tplUpdateBtn" disabled>수정</button>
+          </div>
+          <div class="tpl-list" id="tplList" style="margin-top:10px">
+            <div class="tpl-empty">저장된 템플릿이 없습니다</div>
+          </div>
+          <div class="btn-row" style="margin-top:8px">
+            <button class="btn btn-ghost btn-sm" type="button" id="tplExportBtn">JSON 내보내기</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="tplImportBtn">JSON 가져오기</button>
+          </div>
+          <input type="file" id="tplImportFile" class="hidden-file" accept="application/json,.json">
+          <p class="tip">템플릿은 브라우저에 저장됩니다. 새로고침 후에도 유지됩니다.</p>
         </div>
       </div>
 
@@ -373,6 +514,9 @@
   </div>
 
   <script>
+    const STORAGE_KEY = 't03-meme-templates-v1';
+    const JSON_VERSION = 1;
+
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const fileInput = document.getElementById('fileInput');
@@ -393,16 +537,28 @@
     const resetBtn = document.getElementById('resetBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const ratioBtns = document.querySelectorAll('.ratio-btn');
+    const tplNameInput = document.getElementById('tplNameInput');
+    const tplSaveBtn = document.getElementById('tplSaveBtn');
+    const tplUpdateBtn = document.getElementById('tplUpdateBtn');
+    const tplList = document.getElementById('tplList');
+    const tplExportBtn = document.getElementById('tplExportBtn');
+    const tplImportBtn = document.getElementById('tplImportBtn');
+    const tplImportFile = document.getElementById('tplImportFile');
 
     let currentImage = null;
-    let currentRatio = '1/1'; // 기본값
+    let currentRatio = '1/1';
+    let templates = [];
+    let selectedTplId = null;
 
-    // 화면비별 출력 크기 (실제 다운로드 해상도)
     const RATIO_SIZE = {
       '1/1':  { w: 1080, h: 1080 },
       '4/5':  { w: 1080, h: 1350 },
       '9/16': { w: 1080, h: 1920 }
     };
+
+    function uid() {
+      return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
 
     function showMsg(text, type = 'error') {
       msgEl.textContent = text;
@@ -414,23 +570,19 @@
     }
 
     function getOutputSize() {
-      return RATIO_SIZE[currentRatio];
+      return RATIO_SIZE[currentRatio] || RATIO_SIZE['1/1'];
     }
 
-    // 이미지를 선택한 비율에 맞게 cover 방식으로 그리기
     function drawImageCover(img, targetW, targetH) {
       const imgRatio = img.width / img.height;
       const targetRatio = targetW / targetH;
       let sx, sy, sw, sh;
-
       if (imgRatio > targetRatio) {
-        // 이미지가 더 넓음 → 좌우 자름
         sh = img.height;
         sw = img.height * targetRatio;
         sx = (img.width - sw) / 2;
         sy = 0;
       } else {
-        // 이미지가 더 높음 → 상하 자름
         sw = img.width;
         sh = img.width / targetRatio;
         sx = 0;
@@ -439,13 +591,61 @@
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
     }
 
+    // 긴 줄 자동 줄바꿈 + Enter 줄바꿈
+    function wrapLines(text, maxWidth, font) {
+      ctx.font = font;
+      const paragraphs = String(text).split(/\r?\n/);
+      const lines = [];
+      for (const para of paragraphs) {
+        if (para === '') {
+          lines.push('');
+          continue;
+        }
+        // 한글/이모지/영문 혼합을 위해 글자 단위로 측정
+        let current = '';
+        for (const ch of para) {
+          const test = current + ch;
+          if (ctx.measureText(test).width > maxWidth && current) {
+            lines.push(current);
+            current = ch;
+          } else {
+            current = test;
+          }
+        }
+        if (current !== '') lines.push(current);
+      }
+      return lines.length ? lines : [''];
+    }
+
+    function drawMultilineText(text, x, y, size, color, sColor, sWidth, canvasW) {
+      const font = `bold ${size}px "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif`;
+      const maxWidth = Math.max(40, canvasW - x - 16);
+      const lines = wrapLines(text, maxWidth, font);
+      const lineHeight = Math.round(size * 1.35);
+
+      ctx.font = font;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+
+      lines.forEach((line, i) => {
+        const ly = y + i * lineHeight;
+        if (sWidth > 0) {
+          ctx.lineWidth = sWidth;
+          ctx.strokeStyle = sColor;
+          ctx.lineJoin = 'round';
+          ctx.miterLimit = 2;
+          ctx.strokeText(line, x, ly);
+        }
+        ctx.fillStyle = color;
+        ctx.fillText(line, x, ly);
+      });
+    }
+
     function draw() {
       if (!currentImage) return;
-
       const { w, h } = getOutputSize();
       canvas.width = w;
       canvas.height = h;
-
       canvasFrame.style.aspectRatio = `${w} / ${h}`;
 
       ctx.clearRect(0, 0, w, h);
@@ -459,34 +659,271 @@
       const sColor = strokeColor.value;
       const sWidth = Number(strokeWidth.value);
 
-      ctx.font = `bold ${size}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
+      drawMultilineText(text, x, y, size, color, sColor, sWidth, w);
 
-      if (sWidth > 0) {
-        ctx.lineWidth = sWidth;
-        ctx.strokeStyle = sColor;
-        ctx.strokeText(text, x, y);
-      }
-      ctx.fillStyle = color;
-      ctx.fillText(text, x, y);
-
-      // 슬라이더 최대값 업데이트
       posX.max = w;
       posY.max = h;
     }
 
-    // 화면비 버튼
-    ratioBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        ratioBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentRatio = btn.dataset.ratio;
-        draw();
+    function setRatio(ratio) {
+      currentRatio = ratio;
+      ratioBtns.forEach(b => {
+        b.classList.toggle('active', b.dataset.ratio === ratio);
       });
+      draw();
+    }
+
+    function readControls() {
+      return {
+        text: textInput.value,
+        ratio: currentRatio,
+        posX: Number(posX.value),
+        posY: Number(posY.value),
+        fontSize: Number(fontSize.value),
+        textColor: textColor.value,
+        strokeColor: strokeColor.value,
+        strokeWidth: Number(strokeWidth.value)
+      };
+    }
+
+    function applyControls(data) {
+      if (!data) return;
+      textInput.value = data.text ?? '';
+      if (data.ratio && RATIO_SIZE[data.ratio]) setRatio(data.ratio);
+      if (data.posX != null) { posX.value = data.posX; posXVal.textContent = String(data.posX); }
+      if (data.posY != null) { posY.value = data.posY; posYVal.textContent = String(data.posY); }
+      if (data.fontSize != null) { fontSize.value = data.fontSize; fontSizeVal.textContent = String(data.fontSize); }
+      if (data.textColor) textColor.value = data.textColor;
+      if (data.strokeColor) strokeColor.value = data.strokeColor;
+      if (data.strokeWidth != null) { strokeWidth.value = data.strokeWidth; strokeWidthVal.textContent = String(data.strokeWidth); }
+      draw();
+    }
+
+    // ── 템플릿 저장소 ──
+    function loadTemplates() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) { templates = []; return; }
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) { templates = []; return; }
+        templates = parsed.filter(isValidTemplate);
+      } catch {
+        templates = [];
+      }
+    }
+
+    function saveTemplates() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
+    }
+
+    function isValidTemplate(t) {
+      if (!t || typeof t !== 'object') return false;
+      if (typeof t.id !== 'string' || !t.id) return false;
+      if (typeof t.name !== 'string' || !t.name.trim()) return false;
+      if (typeof t.text !== 'string') return false;
+      if (!RATIO_SIZE[t.ratio]) return false;
+      if (typeof t.posX !== 'number' || typeof t.posY !== 'number') return false;
+      if (typeof t.fontSize !== 'number') return false;
+      if (typeof t.textColor !== 'string' || typeof t.strokeColor !== 'string') return false;
+      if (typeof t.strokeWidth !== 'number') return false;
+      return true;
+    }
+
+    function renderTplList() {
+      tplList.innerHTML = '';
+      if (!templates.length) {
+        tplList.innerHTML = '<div class="tpl-empty">저장된 템플릿이 없습니다</div>';
+        tplUpdateBtn.disabled = true;
+        return;
+      }
+      templates.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'tpl-item' + (t.id === selectedTplId ? ' active' : '');
+        item.dataset.id = t.id;
+
+        const name = document.createElement('span');
+        name.className = 'tpl-item-name';
+        name.textContent = t.name;
+        name.title = t.name;
+
+        const meta = document.createElement('span');
+        meta.className = 'tpl-item-meta';
+        meta.textContent = t.ratio;
+
+        const actions = document.createElement('div');
+        actions.className = 'tpl-item-actions';
+
+        const loadBtn = document.createElement('button');
+        loadBtn.type = 'button';
+        loadBtn.title = '불러오기';
+        loadBtn.textContent = '↓';
+        loadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedTplId = t.id;
+          tplNameInput.value = t.name;
+          applyControls(t);
+          tplUpdateBtn.disabled = false;
+          renderTplList();
+          showMsg(`템플릿 "${t.name}"을(를) 불러왔습니다`, 'ok');
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'del';
+        delBtn.title = '삭제';
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          templates = templates.filter(x => x.id !== t.id);
+          if (selectedTplId === t.id) {
+            selectedTplId = null;
+            tplUpdateBtn.disabled = true;
+          }
+          saveTemplates();
+          renderTplList();
+          showMsg(`템플릿 "${t.name}"을(를) 삭제했습니다`, 'ok');
+        });
+
+        actions.append(loadBtn, delBtn);
+        item.append(name, meta, actions);
+
+        item.addEventListener('click', () => {
+          selectedTplId = t.id;
+          tplNameInput.value = t.name;
+          applyControls(t);
+          tplUpdateBtn.disabled = false;
+          renderTplList();
+        });
+
+        tplList.append(item);
+      });
+      tplUpdateBtn.disabled = !selectedTplId;
+      scheduleFit();
+    }
+
+    tplSaveBtn.addEventListener('click', () => {
+      const name = (tplNameInput.value || '').trim();
+      if (!name) {
+        showMsg('템플릿 이름을 입력하세요.');
+        return;
+      }
+      const data = readControls();
+      const tpl = { id: uid(), name, ...data };
+      templates.push(tpl);
+      selectedTplId = tpl.id;
+      saveTemplates();
+      renderTplList();
+      showMsg(`템플릿 "${name}"을(를) 저장했습니다`, 'ok');
     });
 
-    // 파일 업로드
+    tplUpdateBtn.addEventListener('click', () => {
+      if (!selectedTplId) return;
+      const idx = templates.findIndex(t => t.id === selectedTplId);
+      if (idx < 0) return;
+      const name = (tplNameInput.value || '').trim() || templates[idx].name;
+      const data = readControls();
+      templates[idx] = { id: selectedTplId, name, ...data };
+      saveTemplates();
+      renderTplList();
+      showMsg(`템플릿 "${name}"을(를) 수정했습니다`, 'ok');
+    });
+
+    // JSON 내보내기
+    tplExportBtn.addEventListener('click', () => {
+      const payload = {
+        version: JSON_VERSION,
+        app: 't03-meme-studio',
+        exportedAt: new Date().toISOString(),
+        templates: templates
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `t03-templates-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showMsg('JSON 파일을 내보냈습니다', 'ok');
+    });
+
+    // JSON 가져오기 — 검증 실패 시 기존 유지
+    tplImportBtn.addEventListener('click', () => tplImportFile.click());
+    tplImportFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      tplImportFile.value = '';
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        let parsed;
+        try {
+          parsed = JSON.parse(reader.result);
+        } catch {
+          showMsg('JSON 문법이 손상되어 가져오지 않았습니다. 기존 템플릿은 유지됩니다.');
+          return;
+        }
+
+        // 필수 구조 검증
+        if (!parsed || typeof parsed !== 'object') {
+          showMsg('필수 항목이 빠진 JSON입니다. 기존 템플릿은 유지됩니다.');
+          return;
+        }
+        const list = Array.isArray(parsed) ? parsed : parsed.templates;
+        if (!Array.isArray(list)) {
+          showMsg('templates 배열이 없습니다. 기존 템플릿은 유지됩니다.');
+          return;
+        }
+        if (list.length === 0) {
+          showMsg('템플릿이 비어 있습니다. 기존 템플릿은 유지됩니다.');
+          return;
+        }
+
+        const valid = [];
+        for (const item of list) {
+          // id/name 등이 빠져 있으면 보정 가능한 것만 통과
+          if (!item || typeof item !== 'object') continue;
+          const candidate = {
+            id: typeof item.id === 'string' && item.id ? item.id : uid(),
+            name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : '',
+            text: typeof item.text === 'string' ? item.text : '',
+            ratio: RATIO_SIZE[item.ratio] ? item.ratio : '1/1',
+            posX: typeof item.posX === 'number' ? item.posX : 50,
+            posY: typeof item.posY === 'number' ? item.posY : 50,
+            fontSize: typeof item.fontSize === 'number' ? item.fontSize : 48,
+            textColor: typeof item.textColor === 'string' ? item.textColor : '#ffffff',
+            strokeColor: typeof item.strokeColor === 'string' ? item.strokeColor : '#000000',
+            strokeWidth: typeof item.strokeWidth === 'number' ? item.strokeWidth : 0
+          };
+          if (!candidate.name) {
+            // 이름 없는 항목은 거부
+            showMsg('필수 항목(이름)이 빠진 템플릿이 있어 가져오지 않았습니다. 기존 템플릿은 유지됩니다.');
+            return;
+          }
+          valid.push(candidate);
+        }
+
+        if (!valid.length) {
+          showMsg('유효한 템플릿이 없습니다. 기존 템플릿은 유지됩니다.');
+          return;
+        }
+
+        templates = valid;
+        selectedTplId = null;
+        tplUpdateBtn.disabled = true;
+        saveTemplates();
+        renderTplList();
+        showMsg(`${valid.length}개 템플릿을 복원했습니다`, 'ok');
+      };
+      reader.onerror = () => showMsg('파일을 읽지 못했습니다. 기존 템플릿은 유지됩니다.');
+      reader.readAsText(file);
+    });
+
+    // 화면비
+    ratioBtns.forEach(btn => {
+      btn.addEventListener('click', () => setRatio(btn.dataset.ratio));
+    });
+
+    // 파일 업로드 — 잘못된 파일은 거부, 기존 작업 유지
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -511,17 +948,16 @@
           downloadBtn.disabled = false;
 
           const { w, h } = getOutputSize();
-          posX.value = Math.round(w * 0.08);
-          posY.value = Math.round(h * 0.08);
-          posXVal.textContent = posX.value;
-          posYVal.textContent = posY.value;
+          if (Number(posX.value) > w) { posX.value = Math.round(w * 0.06); posXVal.textContent = posX.value; }
+          if (Number(posY.value) > h) { posY.value = Math.round(h * 0.06); posYVal.textContent = posY.value; }
 
           draw();
           showMsg('이미지를 불러왔습니다', 'ok');
         };
-        img.onerror = () => showMsg('이미지를 불러오지 못했습니다.');
+        img.onerror = () => showMsg('이미지를 불러오지 못했습니다. 기존 작업은 유지됩니다.');
         img.src = ev.target.result;
       };
+      reader.onerror = () => showMsg('파일을 읽지 못했습니다. 기존 작업은 유지됩니다.');
       reader.readAsDataURL(file);
     });
 
@@ -539,29 +975,88 @@
     // 다운로드
     downloadBtn.addEventListener('click', () => {
       if (!currentImage) return;
+      draw();
       const link = document.createElement('a');
       const ratioName = currentRatio.replace('/', '-');
-      link.download = `meme-${ratioName}-${textInput.value}.png`;
+      const safeText = (textInput.value || 'meme').slice(0, 20).replace(/[\\/:*?"<>|]/g, '_');
+      link.download = `meme-${ratioName}-${safeText}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
 
-    // 초기화
+    // 초기화 (편집 내용만, 템플릿·이미지는 유지)
     resetBtn.addEventListener('click', () => {
-      textInput.value = '오늘의 한 줄';
+      textInput.value = '오늘의 한 줄\n가장자리와 줄바꿈 테스트';
       const { w, h } = getOutputSize();
-      posX.value = Math.round(w * 0.08);
-      posY.value = Math.round(h * 0.08);
+      posX.value = Math.round(w * 0.06);
+      posY.value = Math.round(h * 0.06);
       posXVal.textContent = posX.value;
       posYVal.textContent = posY.value;
       fontSize.value = 48;
       fontSizeVal.textContent = '48';
       textColor.value = '#ffffff';
       strokeColor.value = '#000000';
-      strokeWidth.value = 0;
-      strokeWidthVal.textContent = '0';
+      strokeWidth.value = 3;
+      strokeWidthVal.textContent = '3';
+      selectedTplId = null;
+      tplNameInput.value = '';
+      tplUpdateBtn.disabled = true;
+      renderTplList();
       draw();
+      showMsg('문구 설정을 초기화했습니다', 'ok');
     });
+
+    // 컨트롤 패널을 스크롤 없이 창 높이에 맞춰 축소
+    const controlsEl = document.querySelector('.controls');
+    const controlsBody = document.querySelector('.controls-body');
+    const footerEl = document.querySelector('.footer-actions');
+
+    function fitControlsToHeight() {
+      if (!controlsEl || !controlsBody) return;
+
+      // 측정 전 스케일 초기화
+      controlsBody.style.zoom = '';
+      controlsBody.style.transform = '';
+      controlsBody.style.width = '';
+
+      const footerH = footerEl ? footerEl.offsetHeight : 0;
+      const available = controlsEl.clientHeight - footerH;
+      if (available <= 0) return;
+
+      // 실제 콘텐츠 높이
+      const needed = controlsBody.scrollHeight;
+      if (needed <= available) return;
+
+      // 비율로 줄이되 너무 작아지지 않게 하한
+      const scale = Math.max(0.55, available / needed);
+
+      // zoom: 레이아웃까지 함께 줄어들어 스크롤 없이 화면에 맞춤 (Chromium/Edge)
+      if ('zoom' in controlsBody.style) {
+        controlsBody.style.zoom = String(scale);
+      } else {
+        // Firefox 등: transform 대체 (가로는 역보정)
+        controlsBody.style.transform = `scale(${scale})`;
+        controlsBody.style.width = `${100 / scale}%`;
+      }
+    }
+
+    let fitRaf = 0;
+    function scheduleFit() {
+      cancelAnimationFrame(fitRaf);
+      fitRaf = requestAnimationFrame(fitControlsToHeight);
+    }
+
+    window.addEventListener('resize', scheduleFit);
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(scheduleFit);
+      ro.observe(controlsEl);
+      ro.observe(controlsBody);
+    }
+
+    // 시작
+    loadTemplates();
+    renderTplList();
+    scheduleFit();
   </script>
 </body>
 </html>
