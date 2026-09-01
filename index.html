@@ -28,15 +28,16 @@
     .app {
       height: 100%;
       display: grid;
-      grid-template-columns: 1fr 300px;
+      grid-template-columns: minmax(0, 1fr) 300px;
       gap: 0;
     }
-    /* 왼쪽: 미리보기 */
     .preview-area {
       display: flex;
       flex-direction: column;
       background: #0a0c12;
       border-right: 1px solid var(--line);
+      min-width: 0;
+      min-height: 0;
     }
     .preview-header {
       padding: 14px 20px;
@@ -67,11 +68,23 @@
       overflow: hidden;
       position: relative;
     }
-    canvas {
-      max-width: 100%;
-      max-height: 100%;
+    .canvas-frame {
+      background: #111;
       border-radius: 8px;
       box-shadow: 0 8px 32px rgba(0,0,0,.45);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
+      max-height: 100%;
+      flex-shrink: 0;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     .placeholder {
       color: var(--muted);
@@ -85,7 +98,6 @@
       margin-bottom: 6px;
       font-size: 1rem;
     }
-    /* 오른쪽: 컨트롤 */
     .controls {
       display: flex;
       flex-direction: column;
@@ -100,6 +112,7 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
+      min-height: 0;
     }
     .section {
       background: var(--surface2);
@@ -138,9 +151,7 @@
       font-size: 0.9rem;
       outline: none;
     }
-    input[type="text"]:focus {
-      border-color: var(--accent);
-    }
+    input[type="text"]:focus { border-color: var(--accent); }
     input[type="range"] {
       width: 100%;
       height: 5px;
@@ -175,15 +186,40 @@
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
-    .file-btn {
+    .ratio-btns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .ratio-btn {
+      padding: 8px 0;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .15s;
+    }
+    .ratio-btn:hover { border-color: var(--accent); color: var(--ink); }
+    .ratio-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .file-btn { 
       position: relative;
       overflow: hidden;
+      width: 100%;
     }
     .file-btn input[type="file"] {
       position: absolute;
       inset: 0;
       opacity: 0;
       cursor: pointer;
+      width: 100%;
+      height: 100%;
     }
     .btn {
       display: flex;
@@ -213,6 +249,17 @@
     .btn-ghost:hover {
       background: var(--surface2);
       color: var(--ink);
+    }
+    .btn-download {
+      background: #059669;
+      color: #fff;
+      width: 100%;
+    }
+    .btn-download:hover { background: #10b981; }
+    .btn-download:disabled {
+      background: #374151;
+      color: #6b7280;
+      cursor: not-allowed;
     }
     .msg {
       font-size: 0.78rem;
@@ -249,29 +296,38 @@
 </head>
 <body>
   <div class="app">
-    <!-- 미리보기 -->
     <div class="preview-area">
       <div class="preview-header">
         <h1>짤·카드 스튜디오</h1>
-        <span>T03 · 1단계</span>
+        <span>T03 · 2단계</span>
       </div>
       <div class="canvas-wrap" id="canvasWrap">
         <div class="placeholder" id="placeholder">
           <strong>이미지를 올려주세요</strong>
           PNG 또는 JPEG 파일을 선택하면<br>여기에 미리보기가 나타납니다
         </div>
-        <canvas id="canvas" style="display:none;"></canvas>
+        <div class="canvas-frame" id="canvasFrame" style="display:none;">
+          <canvas id="canvas"></canvas>
+        </div>
       </div>
     </div>
 
-    <!-- 컨트롤 -->
     <div class="controls">
-      <div class="controls-body">
-        <div class="file-btn">
-          <button class="btn btn-primary" type="button">이미지 선택</button>
-          <input type="file" id="fileInput" accept="image/png,image/jpeg,.png,.jpg,.jpeg">
+      <div class="section">
+        <div class="controls-body">
+          <div class="file-btn">
+            <button class="btn btn-primary" type="button">이미지 선택</button>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,.png,.jpg,.jpeg">
+          </div>
+          <div class="msg" id="msg"></div>
+
+          <div class="section-title">화면비</div>
+          <div class="ratio-btns">
+            <button class="ratio-btn active" data-ratio="1/1">1:1</button>
+            <button class="ratio-btn" data-ratio="4/5">4:5</button>
+            <button class="ratio-btn" data-ratio="9/16">9:16</button>
+          </div>
         </div>
-        <div class="msg" id="msg"></div>
 
         <div class="section">
           <div class="section-title">문구</div>
@@ -310,6 +366,7 @@
       </div>
 
       <div class="footer-actions">
+        <button class="btn btn-download" type="button" id="downloadBtn" disabled>이미지 다운로드</button>
         <button class="btn btn-ghost" type="button" id="resetBtn">문구 초기화</button>
       </div>
     </div>
@@ -320,6 +377,7 @@
     const ctx = canvas.getContext('2d');
     const fileInput = document.getElementById('fileInput');
     const placeholder = document.getElementById('placeholder');
+    const canvasFrame = document.getElementById('canvasFrame');
     const msgEl = document.getElementById('msg');
     const textInput = document.getElementById('textInput');
     const posX = document.getElementById('posX');
@@ -333,8 +391,18 @@
     const strokeWidth = document.getElementById('strokeWidth');
     const strokeWidthVal = document.getElementById('strokeWidthVal');
     const resetBtn = document.getElementById('resetBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const ratioBtns = document.querySelectorAll('.ratio-btn');
 
     let currentImage = null;
+    let currentRatio = '1/1'; // 기본값
+
+    // 화면비별 출력 크기 (실제 다운로드 해상도)
+    const RATIO_SIZE = {
+      '1/1':  { w: 1080, h: 1080 },
+      '4/5':  { w: 1080, h: 1350 },
+      '9/16': { w: 1080, h: 1920 }
+    };
 
     function showMsg(text, type = 'error') {
       msgEl.textContent = text;
@@ -345,18 +413,43 @@
       msgEl.textContent = '';
     }
 
-    function updateSliderMax() {
-      if (!currentImage) return;
-      posX.max = currentImage.width;
-      posY.max = currentImage.height;
+    function getOutputSize() {
+      return RATIO_SIZE[currentRatio];
+    }
+
+    // 이미지를 선택한 비율에 맞게 cover 방식으로 그리기
+    function drawImageCover(img, targetW, targetH) {
+      const imgRatio = img.width / img.height;
+      const targetRatio = targetW / targetH;
+      let sx, sy, sw, sh;
+
+      if (imgRatio > targetRatio) {
+        // 이미지가 더 넓음 → 좌우 자름
+        sh = img.height;
+        sw = img.height * targetRatio;
+        sx = (img.width - sw) / 2;
+        sy = 0;
+      } else {
+        // 이미지가 더 높음 → 상하 자름
+        sw = img.width;
+        sh = img.width / targetRatio;
+        sx = 0;
+        sy = (img.height - sh) / 2;
+      }
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
     }
 
     function draw() {
       if (!currentImage) return;
-      canvas.width = currentImage.width;
-      canvas.height = currentImage.height;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(currentImage, 0, 0);
+
+      const { w, h } = getOutputSize();
+      canvas.width = w;
+      canvas.height = h;
+
+      canvasFrame.style.aspectRatio = `${w} / ${h}`;
+
+      ctx.clearRect(0, 0, w, h);
+      drawImageCover(currentImage, w, h);
 
       const text = textInput.value || '';
       const size = Number(fontSize.value);
@@ -377,8 +470,23 @@
       }
       ctx.fillStyle = color;
       ctx.fillText(text, x, y);
+
+      // 슬라이더 최대값 업데이트
+      posX.max = w;
+      posY.max = h;
     }
 
+    // 화면비 버튼
+    ratioBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        ratioBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentRatio = btn.dataset.ratio;
+        draw();
+      });
+    });
+
+    // 파일 업로드
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -399,12 +507,15 @@
         img.onload = () => {
           currentImage = img;
           placeholder.style.display = 'none';
-          canvas.style.display = 'block';
-          updateSliderMax();
-          posX.value = Math.round(img.width * 0.08);
-          posY.value = Math.round(img.height * 0.08);
+          canvasFrame.style.display = 'flex';
+          downloadBtn.disabled = false;
+
+          const { w, h } = getOutputSize();
+          posX.value = Math.round(w * 0.08);
+          posY.value = Math.round(h * 0.08);
           posXVal.textContent = posX.value;
           posYVal.textContent = posY.value;
+
           draw();
           showMsg('이미지를 불러왔습니다', 'ok');
         };
@@ -414,6 +525,7 @@
       reader.readAsDataURL(file);
     });
 
+    // 실시간 반영
     [textInput, posX, posY, fontSize, textColor, strokeColor, strokeWidth].forEach(el => {
       el.addEventListener('input', () => {
         if (el === posX) posXVal.textContent = el.value;
@@ -424,15 +536,22 @@
       });
     });
 
+    // 다운로드
+    downloadBtn.addEventListener('click', () => {
+      if (!currentImage) return;
+      const link = document.createElement('a');
+      const ratioName = currentRatio.replace('/', '-');
+      link.download = `meme-${ratioName}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // 초기화
     resetBtn.addEventListener('click', () => {
       textInput.value = '오늘의 한 줄';
-      if (currentImage) {
-        posX.value = Math.round(currentImage.width * 0.08);
-        posY.value = Math.round(currentImage.height * 0.08);
-      } else {
-        posX.value = 50;
-        posY.value = 50;
-      }
+      const { w, h } = getOutputSize();
+      posX.value = Math.round(w * 0.08);
+      posY.value = Math.round(h * 0.08);
       posXVal.textContent = posX.value;
       posYVal.textContent = posY.value;
       fontSize.value = 48;
