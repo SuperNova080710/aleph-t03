@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>짤·카드 스튜디오 · T03</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --ink: #1a1d24;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', 'Malgun Gothic', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      padding: 20px;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .wrap { grid-template-columns: 1fr; }
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    h1 {
+      font-size: 1.35rem;
+      margin-bottom: 4px;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 18px;
+    }
+    .preview-box {
+      background: #111;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+      position: relative;
+    }
+    canvas {
+      max-width: 100%;
+      max-height: 70vh;
+      display: block;
+    }
+    .placeholder {
+      color: #9ca3af;
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 0.95rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="color"],
+    input[type="range"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+    }
+    input[type="color"] {
+      height: 40px;
+      padding: 4px;
+      cursor: pointer;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: .15s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+    }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-ghost {
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      width: 100%;
+      margin-top: 8px;
+    }
+    .btn-ghost:hover { background: #e5e7eb; }
+    .msg {
+      font-size: 0.85rem;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: none;
+    }
+    .msg.error {
+      background: #fef2f2;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+      display: block;
+    }
+    .msg.ok {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      display: block;
+    }
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .04em;
+      margin: 18px 0 10px;
+      text-transform: uppercase;
+    }
+    .file-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .file-btn input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- 미리보기 -->
+    <div class="panel">
+      <h1>짤·카드 스튜디오</h1>
+      <p class="sub">이미지를 올리고 문구를 자유롭게 배치하세요</p>
+      <div class="preview-box" id="previewBox">
+        <div class="placeholder" id="placeholder">
+          이미지를 업로드하면<br>여기에 미리보기가 나타납니다
+        </div>
+        <canvas id="canvas" style="display:none;"></canvas>
+      </div>
+    </div>
+
+    <!-- 조작 패널 -->
+    <div class="panel">
+      <div class="file-btn">
+        <button class="btn btn-primary" type="button">이미지 선택 (PNG / JPEG)</button>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,.png,.jpg,.jpeg">
+      </div>
+      <div class="msg" id="msg"></div>
+
+      <div class="section-title">문구</div>
+      <label for="textInput">텍스트</label>
+      <input type="text" id="textInput" placeholder="여기에 문구를 입력하세요" value="오늘의 한 줄">
+
+      <div class="section-title">위치 & 크기</div>
+      <div class="row">
+        <div>
+          <label for="posX">X 위치</label>
+          <input type="number" id="posX" value="50">
+        </div>
+        <div>
+          <label for="posY">Y 위치</label>
+          <input type="number" id="posY" value="50">
+        </div>
+      </div>
+      <label for="fontSize">글자 크기 <span id="fontSizeVal">48</span>px</label>
+      <input type="range" id="fontSize" min="12" max="120" value="48">
+
+      <div class="section-title">색상</div>
+      <label for="textColor">글자 색</label>
+      <input type="color" id="textColor" value="#ffffff">
+
+      <label for="strokeColor">외곽선 색 (선택)</label>
+      <input type="color" id="strokeColor" value="#000000">
+
+      <label for="strokeWidth">외곽선 두께 <span id="strokeWidthVal">0</span>px</label>
+      <input type="range" id="strokeWidth" min="0" max="12" value="0">
+
+      <button class="btn btn-ghost" type="button" id="resetBtn">문구 초기화</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const fileInput = document.getElementById('fileInput');
+    const placeholder = document.getElementById('placeholder');
+    const msgEl = document.getElementById('msg');
+    const textInput = document.getElementById('textInput');
+    const posX = document.getElementById('posX');
+    const posY = document.getElementById('posY');
+    const fontSize = document.getElementById('fontSize');
+    const fontSizeVal = document.getElementById('fontSizeVal');
+    const textColor = document.getElementById('textColor');
+    const strokeColor = document.getElementById('strokeColor');
+    const strokeWidth = document.getElementById('strokeWidth');
+    const strokeWidthVal = document.getElementById('strokeWidthVal');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let currentImage = null; // 현재 로드된 이미지
+
+    function showMsg(text, type = 'error') {
+      msgEl.textContent = text;
+      msgEl.className = 'msg ' + type;
+    }
+
+    function clearMsg() {
+      msgEl.className = 'msg';
+      msgEl.textContent = '';
+    }
+
+    function draw() {
+      if (!currentImage) return;
+
+      // 캔버스 크기를 이미지에 맞춤
+      canvas.width = currentImage.width;
+      canvas.height = currentImage.height;
+
+      // 이미지 그리기
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(currentImage, 0, 0);
+
+      // 텍스트 설정
+      const text = textInput.value || '';
+      const size = Number(fontSize.value);
+      const x = Number(posX.value);
+      const y = Number(posY.value);
+      const color = textColor.value;
+      const sColor = strokeColor.value;
+      const sWidth = Number(strokeWidth.value);
+
+      ctx.font = `bold ${size}px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+
+      // 외곽선
+      if (sWidth > 0) {
+        ctx.lineWidth = sWidth;
+        ctx.strokeStyle = sColor;
+        ctx.strokeText(text, x, y);
+      }
+
+      // 본문 텍스트
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    }
+
+    // 파일 선택
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // PNG / JPEG만 허용
+      const validTypes = ['image/png', 'image/jpeg'];
+      const validExt = /\.(png|jpe?g)$/i.test(file.name);
+
+      if (!validTypes.includes(file.type) && !validExt) {
+        showMsg('PNG 또는 JPEG 파일만 올릴 수 있습니다. 기존 작업은 유지됩니다.');
+        fileInput.value = ''; // 선택 초기화
+        return;
+      }
+
+      clearMsg();
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          currentImage = img;
+          placeholder.style.display = 'none';
+          canvas.style.display = 'block';
+          // 기본 위치를 이미지 중앙 근처로
+          posX.value = Math.round(img.width * 0.1);
+          posY.value = Math.round(img.height * 0.1);
+          draw();
+          showMsg('이미지를 불러왔습니다.', 'ok');
+        };
+        img.onerror = () => {
+          showMsg('이미지를 불러오지 못했습니다.');
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // 실시간 반영
+    [textInput, posX, posY, fontSize, textColor, strokeColor, strokeWidth].forEach(el => {
+      el.addEventListener('input', () => {
+        if (el === fontSize) fontSizeVal.textContent = el.value;
+        if (el === strokeWidth) strokeWidthVal.textContent = el.value;
+        draw();
+      });
+    });
+
+    // 초기화
+    resetBtn.addEventListener('click', () => {
+      textInput.value = '오늘의 한 줄';
+      posX.value = currentImage ? Math.round(currentImage.width * 0.1) : 50;
+      posY.value = currentImage ? Math.round(currentImage.height * 0.1) : 50;
+      fontSize.value = 48;
+      fontSizeVal.textContent = '48';
+      textColor.value = '#ffffff';
+      strokeColor.value = '#000000';
+      strokeWidth.value = 0;
+      strokeWidthVal.textContent = '0';
+      draw();
+    });
+  </script>
+</body>
+</html>
