@@ -541,7 +541,7 @@
       if (!currentImage) return;
       const link = document.createElement('a');
       const ratioName = currentRatio.replace('/', '-');
-      link.download = `meme-${ratioName}.png`;
+      link.download = `meme-${ratioName}-${textInput.value}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
